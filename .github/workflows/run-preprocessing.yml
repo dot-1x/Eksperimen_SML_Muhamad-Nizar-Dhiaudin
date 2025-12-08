@@ -25,8 +25,7 @@ jobs:
 
       - name: Run preprocessing script
         run: |
-          cd preprocessing
-          python automate_Muhamad-Nizar-Dhiaudin.py
+          python ./preprocessing/automate_Muhamad-Nizar-Dhiaudin.py
 
       - name: Commit and push changes
         run: |
