@@ -1,18 +1,8 @@
-import os
-import math
 import warnings
-import glob
 
 import pandas as pd
-import numpy as np
-import datetime as dt
 import seaborn as sns
-import matplotlib
 import matplotlib.pyplot as plt
-
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from yellowbrick.cluster import KElbowVisualizer
 
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -38,15 +28,55 @@ def replace_with_threshold(dataframe, variable):
 
 def preprocess(df):
   # dropna
+  print("Removing missing values...")
   df.dropna(subset="Customer ID",axis=0,inplace=True)
   # removing canceled product
+  print("Removing canceled transactions...")
   df = df[~df.Invoice.str.contains('C',na=False)]
   # drop duplicates
+  print("Removing duplicate records...")
   df = df.drop_duplicates()
   # Convert InvoiceDate to datetime
+  print("Converting InvoiceDate to datetime...")
   df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
+  # Handling negative values
+  print("Removing negative values in Quantity and Price...")
+  df = df[(df['Quantity'] > 0) & (df['Price'] > 0)]
+  # Data type validation
+  print("Validating and converting data types...")
+  df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
+  df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')
+  df = df.dropna(subset=['Price', 'Quantity'])
+  # Remove empty strings and whitespace
+  print("Removing empty strings and whitespace in key columns...")
+  df['Description'] = df['Description'].str.strip()
+  df = df[df['Description'].str.len() > 0]
+  # Remove zero values in critical columns
+  print("Removing zero values in Quantity and Price...")
+  df = df[(df['Quantity'] != 0) & (df['Price'] != 0)]
   # removing outlier
+  print("Handling outliers in Quantity and Price columns...")
   replace_with_threshold(df,"Quantity")
   replace_with_threshold(df,"Price")
-
+  # Feature engineering: create Revenue column
+  df["Revenue"] = df["Quantity"] * df["Price"]
   return df
+
+
+def main():
+    # Load data
+    print("Starting data preprocessing...")
+    DATA_PATH = './uci-retail_raw.csv'
+    print("Loading data from:", DATA_PATH)
+    df = pd.read_csv('./uci-retail_raw.csv')
+
+    # Preprocess data
+    df_cleaned = preprocess(df)
+
+    # Save cleaned data
+    print("Saving cleaned data to './preprocessing/uci-retail_preprocessing.csv'...")
+    df_cleaned.to_csv('./preprocessing/uci-retail_preprocessing.csv', index=False)
+
+
+if __name__ == "__main__":
+    main()
