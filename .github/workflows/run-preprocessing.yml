@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - "uci-retail_raw.csv"
-      - "preprocessing/**"
-      - "requirements.txt"
 
 jobs:
   preprocess:
